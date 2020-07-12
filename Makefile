@@ -28,7 +28,7 @@ local-start:
 	sam local start-lambda
 
 build-HelloWorldFunction:
-	cp composer.* php.ini $(ARTIFACTS_DIR)
+	cp composer.* config.php php.ini $(ARTIFACTS_DIR)
 	cp -a app $(ARTIFACTS_DIR)
 	composer install \
 		--no-ansi \

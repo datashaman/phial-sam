@@ -21,7 +21,6 @@ RUN yum install -y \
     ${PHP_PACKAGE}-mbstring \
     ${PHP_PACKAGE}-mysqlnd \
     ${PHP_PACKAGE}-pdo \
-    ${PHP_PACKAGE}-pgsql \
     ${PHP_PACKAGE}-process \
     ${PHP_PACKAGE}-xml
 
@@ -30,10 +29,10 @@ WORKDIR /opt/php
 
 RUN mkdir lib \
     && cp \
+        /usr/lib64/libmysqlclient.so* \
         /usr/lib64/libedit.so* \
         /usr/lib64/libncurses.so* \
         /usr/lib64/libpcre.so* \
-        /usr/lib64/libpq.so* \
         /usr/lib64/libtinfo.so* \
         lib
 

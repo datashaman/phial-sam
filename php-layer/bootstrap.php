@@ -9,6 +9,7 @@ require_once LAMBDA_TASK_ROOT . '/vendor/autoload.php';
 use DI\ContainerBuilder;
 use GuzzleHttp\Client;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 
 class Context
 {
@@ -59,6 +60,11 @@ class Context
     {
         return getenv('AWS_LAMBDA_LOG_STREAM_NAME');
     }
+
+    public function getLogger(): LoggerInterface
+    {
+        return $this->handler->getLogger();
+    }
 }
 
 class RuntimeHandler
@@ -74,6 +80,11 @@ class RuntimeHandler
     private $client;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * @var string
      */
     private $requestId = '';
@@ -83,8 +94,8 @@ class RuntimeHandler
         $this->createClient();
 
         try {
-            $this->configureErrorReporting();
             $this->buildContainer();
+            $this->configureLogging();
         } catch (Throwable $exception) {
             $this->error(
                 'Error initializing handler',
@@ -103,7 +114,7 @@ class RuntimeHandler
         while (true) {
             try {
                 $event = $this->getNextInvocation();
-                $context = new Context($this);
+                $context = $this->createContext();
                 $response = $this->container->call(
                     LAMBDA_TASK_HANDLER,
                     [
@@ -125,22 +136,25 @@ class RuntimeHandler
         }
     }
 
+    public function getLogger(): LoggerInterface
+    {
+        return $this->logger;
+    }
+
     public function getRequestId(): string
     {
         return $this->requestId;
     }
 
-    private function configureErrorReporting(): void
+    private function configureLogging(): void
     {
-        $this->info('Configure error reporting');
+        $this->info('Configure logging');
+        $this->logger = $this->container->get(LoggerInterface::class);
+    }
 
-        error_reporting(
-            E_ALL &
-            ~E_USER_DEPRECATED &
-            ~E_DEPRECATED &
-            ~E_STRICT &
-            ~E_NOTICE
-        );
+    private function createContext(): Context
+    {
+        return new Context($this);
     }
 
     private function buildContainer(): void
@@ -232,27 +246,18 @@ class RuntimeHandler
         return realpath(LAMBDA_TASK_ROOT . '/' . $path);
     }
 
-    private function fwrite($handle, string $message, array $context = []): void
-    {
-        fwrite(
-            $handle,
-            sprintf(
-                '%s%s%s',
-                $message,
-                $context ? (' ' . json_encode($context)) : '',
-                PHP_EOL
-            )
-        );
-    }
-
     private function error(string $message, array $context = []): void
     {
-        $this->fwrite(STDERR, $message, $context);
+        if ($this->logger) {
+            $this->logger->error($message, $context);
+        }
     }
 
     private function info(string $message, array $context = []): void
     {
-        $this->fwrite(STDOUT, $message, $context);
+        if ($this->logger) {
+            $this->logger->info($message, $context);
+        }
     }
 }
 

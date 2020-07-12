@@ -8,6 +8,8 @@ class Handler
 {
     function __invoke($event, $context = null)
     {
+        $logger = $context->getLogger()->debug('Testing');
+
         return [
             'statusCode' => 200,
             'body' => json_encode(
