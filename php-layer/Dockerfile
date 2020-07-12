@@ -19,32 +19,24 @@ RUN yum install -y \
     ${PHP_PACKAGE}-gd \
     ${PHP_PACKAGE}-json \
     ${PHP_PACKAGE}-mbstring \
-    ${PHP_PACKAGE}-mysqlnd \
-    ${PHP_PACKAGE}-pdo \
     ${PHP_PACKAGE}-process \
     ${PHP_PACKAGE}-xml
 
-RUN mkdir /opt/php
-WORKDIR /opt/php
+WORKDIR /opt
+
+RUN mkdir bin \
+    && cp /usr/bin/{phar,php} bin \
+    && curl -sL https://getcomposer.org/installer | bin/php -- --install-dir=bin/ --filename=composer
 
 RUN mkdir lib \
     && cp \
-        /usr/lib64/libmysqlclient.so* \
         /usr/lib64/libedit.so* \
         /usr/lib64/libncurses.so* \
         /usr/lib64/libpcre.so* \
         /usr/lib64/libtinfo.so* \
         lib
 
-RUN mkdir -p lib/php \
+RUN mkdir lib/php \
     && cp -a /usr/lib64/php/${PHP_VERSION}/modules lib/php
 
-RUN mkdir bin \
-    && cp /usr/bin/{phar,php} bin \
-    && curl -sL https://getcomposer.org/installer | bin/php -- --install-dir=bin/ --filename=composer
-
-COPY bootstrap.php .
-
-WORKDIR /opt
-
-COPY bootstrap .
+COPY bootstrap bootstrap.php ./
