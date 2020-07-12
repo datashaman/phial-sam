@@ -13,7 +13,19 @@ deploy: build
 	sam deploy
 
 invoke:
-	sam local invoke
+	sam local invoke --no-verify-ssl
+
+local-invoke:
+	aws lambda invoke \
+		--endpoint-url http://127.0.0.1:3001 \
+		--function-name=HelloWorldFunction \
+		--no-verify-ssl \
+		out.txt \
+		&& cat out.txt \
+		&& echo ""
+
+local-start:
+	sam local start-lambda
 
 build-HelloWorldFunction:
 	cp composer.* php.ini $(ARTIFACTS_DIR)
