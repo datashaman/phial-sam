@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/opt/php/lib" /opt/php/bin/php -c php.ini /opt/php/bootstrap.php
