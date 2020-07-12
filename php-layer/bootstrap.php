@@ -105,7 +105,10 @@ class RuntimeHandler
 
         $this->client = new Client(
             [
-                'base_uri' => 'http://' . LAMBDA_TASK_API . '/2018-06-01/',
+                'base_uri' => sprintf(
+                    'http://%s/2018-06-01/',
+                    LAMBDA_TASK_API
+                ),
             ]
         );
     }
@@ -142,7 +145,12 @@ class RuntimeHandler
                 : 'runtime/init/error';
 
             $error = [
-                'errorMessage' => $exception->getMessage() . ' ' . $exception->getFile() . ':' . $exception->getLine(),
+                'errorMessage' => sprintf(
+                    '%s %s:%d',
+                    $exception->getMessage(),
+                    $exception->getFile(),
+                    $exception->getLine()
+                ),
                 'errorType' => get_class($exception),
             ];
 
@@ -167,19 +175,27 @@ class RuntimeHandler
         return realpath(LAMBDA_TASK_ROOT . '/' . $path);
     }
 
-    private function log($handle, string $message, array $context = []): void
+    private function fwrite($handle, string $message, array $context = []): void
     {
-        fwrite($handle, $message . ($context ? (' ' . json_encode($context)) : '') . PHP_EOL);
+        fwrite(
+            $handle,
+            sprintf(
+                '%s%s%s',
+                $message,
+                $context ? (' ' . json_encode($context)) : '',
+                PHP_EOL
+            )
+        );
     }
 
     private function error(string $message, array $context = []): void
     {
-        $this->log(STDERR, $message, $context);
+        $this->fwrite(STDERR, $message, $context);
     }
 
     private function info(string $message, array $context = []): void
     {
-        $this->log(STDOUT, $message, $context);
+        $this->fwrite(STDOUT, $message, $context);
     }
 }
 
